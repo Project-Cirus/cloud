@@ -12,6 +12,7 @@ Project Cirus creates a seamless group collaboration solution by combining indus
 
 ## Installation
 A detailed installation procedure is given in [INSTALL.md](docs/INSTALL.md).
+We have provided a [setup tool](https://project-cirus.github.io/index.html) which allows you to easily fill in neccesary parameters and guides you through the setup and installaiton process.
 
 Information on authentication and user settings is documented in [SETUP.md](docs/SETUP.md).
 
