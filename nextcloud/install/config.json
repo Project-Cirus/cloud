@@ -1,0 +1,23 @@
+{    
+    "system": {
+        "user_backends": [
+            {
+                "class": "OC_User_IMAP",
+                "arguments": [
+                    "front",
+                    10143,
+                    null,
+                    null,
+                    true,
+                    false
+                ]
+            }
+        ]
+    },
+    "apps": {
+        "external": {
+            "sites": "{\"1\":{\"id\":1,\"name\":\"Riot\",\"url\":\"https:\\\/\\\/riot.{{domain}}\",\"lang\":\"\",\"type\":\"link\",\"device\":\"\",\"icon\":\"riot.png\",\"groups\":[],\"redirect\":false},\"2\":{\"icon\":\"settings.svg\",\"lang\":\"\",\"type\":\"settings\",\"device\":\"\",\"groups\":[],\"redirect\":true,\"id\":2,\"name\":\"Mailu\",\"url\":\"https:\\\/\\\/mail.{{domain}}\\\/admin\"}}",
+            "max_site": "2"
+        }
+    }
+}

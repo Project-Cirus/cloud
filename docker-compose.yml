@@ -1,0 +1,217 @@
+version: '2.2'
+
+services:
+
+  db:
+    image: mariadb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: always
+    volumes:
+      - db:/var/lib/mysql
+    env_file:
+      - nextcloud.env
+
+  nextcloud:
+    image: nextcloud:apache
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html
+      - ./nextcloud/install:/install
+    environment:
+      - VIRTUAL_HOST=cloud.${DOMAIN}
+      - LETSENCRYPT_HOST=cloud.${DOMAIN}
+      - MYSQL_HOST=db
+    env_file:
+      - nextcloud.env
+    depends_on:
+      - db
+      - front
+    networks:
+      - proxy-tier
+      - default
+
+  proxy:
+    build: ./proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    volumes:
+      - ./proxy/certs:/etc/nginx/certs:ro
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxy-tier
+      - default
+
+  letsencrypt-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    volumes:
+      - /etc/dockercloud/proxy/certs:/etc/nginx/certs
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy-tier
+    depends_on:
+      - proxy
+
+  # External dependencies
+  redis:
+    image: redis:alpine
+    restart: always
+    volumes:
+      - "/etc/dockercloud/redis:/data"
+    
+  # Core services
+  front:
+    image: ${DOCKER_ORG:-mailu}/${DOCKER_PREFIX:-}nginx:${MAILU_VERSION:-1.7}
+    restart: always
+    env_file: mailu.env
+    logging:
+      driver: json-file
+    environment:
+      - VIRTUAL_HOST=mail.${DOMAIN}
+      - VIRTUAL_PORT=80
+      - VIRTUAL_NETWORK=nginx-proxy
+      - LETSENCRYPT_HOST=mail.${DOMAIN}
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+      - "110:110"
+      - "995:995"
+      - "143:143"
+      - "993:993"
+      - "10143:10143"
+    volumes:
+      - "/etc/dockercloud/proxy/certs/mail.${DOMAIN}/:/certs"
+      - "/etc/dockercloud/overrides/nginx:/overrides"
+    networks:
+      - default  
+
+
+  resolver:
+    image: ${DOCKER_ORG:-mailu}/${DOCKER_PREFIX:-}unbound:${MAILU_VERSION:-1.7}
+    env_file: mailu.env
+    restart: always
+    networks:
+      default:
+        ipv4_address: 192.168.203.254
+
+  admin:
+    image: ${DOCKER_ORG:-mailu}/${DOCKER_PREFIX:-}admin:${MAILU_VERSION:-1.7}
+    restart: always
+    env_file: mailu.env
+    volumes:
+      - "/etc/dockercloud/data:/data"
+      - "/etc/dockercloud/dkim:/dkim"
+    depends_on:
+      - redis
+
+  imap:
+    image: ${DOCKER_ORG:-mailu}/${DOCKER_PREFIX:-}dovecot:${MAILU_VERSION:-1.7}
+    restart: always
+    env_file: mailu.env
+    volumes:
+      - "/etc/dockercloud/mail:/mail"
+      - "/etc/dockercloud/overrides:/overrides"
+    depends_on:
+      - front
+
+  smtp:
+    image: ${DOCKER_ORG:-mailu}/${DOCKER_PREFIX:-}postfix:${MAILU_VERSION:-1.7}
+    restart: always
+    env_file: mailu.env
+    volumes:
+      - "/etc/dockercloud/overrides:/overrides"
+    depends_on:
+      - front
+      - resolver
+    dns:
+      - 192.168.203.254
+
+  antispam:
+    image: ${DOCKER_ORG:-mailu}/${DOCKER_PREFIX:-}rspamd:${MAILU_VERSION:-1.7}
+    restart: always
+    env_file: mailu.env
+    volumes:
+      - "/etc/dockercloud/filter:/var/lib/rspamd"
+      - "/etc/dockercloud/dkim:/dkim"
+      - "/etc/dockercloud/overrides/rspamd:/etc/rspamd/override.d"
+    depends_on:
+      - front
+      - resolver
+    dns:
+      - 192.168.203.254
+
+  riot:
+    image: vectorim/riot-web
+    restart: always
+    environment:
+      - VIRTUAL_HOST=riot.${DOMAIN}
+      - VIRTUAL_PORT=80
+      - VIRTUAL_NETWORK=nginx-proxy
+      - LETSENCRYPT_HOST=riot.${DOMAIN}
+    volumes:
+      - ./riot/config.json:/app/config.json
+    depends_on:
+      - synapse
+    networks:
+      - proxy-tier
+    depends_on:
+      - proxy  
+
+  synapse:
+    build:
+      context: synapse
+    # Since synapse does not retry to connect to the database, restart upon failure
+    restart: unless-stopped
+    environment:
+      - SYNAPSE_CONFIG_PATH=/config/homeserver.yml
+      - VIRTUAL_HOST=synapse.${DOMAIN}
+      - VIRTUAL_PORT=8008
+      - VIRTUAL_NETWORK=nginx-proxy
+      - LETSENCRYPT_HOST=synapse.${DOMAIN}
+    volumes:
+      - ./synapse/data:/data
+      - ./synapse/config:/config
+    ports:
+      - "8008:8008"
+      - "3478:3478"
+    networks:
+      - proxy-tier
+      - default
+    depends_on:
+      - proxy
+      - front
+      - synapse_db 
+   
+  synapse_db:
+    image: docker.io/postgres:10-alpine
+    environment:
+      # ensure the database gets created correctly
+      # https://github.com/matrix-org/synapse/blob/master/docs/postgres.md#set-up-database
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - /etc/dockercloud/matrix/db:/var/lib/postgresql/data 
+
+volumes:
+  db:
+  nextcloud:
+  certs:
+  vhost.d:
+  html:
+
+networks:
+  proxy-tier:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.203.0/24
