@@ -1,7 +1,7 @@
-Project Cloud
+☁️ Project Cirus
 =============
 
-Project Cloud creates a seamless group collaboration solution by combining industry leading cloud tools. Includes file-sharing, online-document-editing, e-mail, instant messanging, and more. Easy to deploy, maintain and extend. 
+Project Cirus creates a seamless group collaboration solution by combining industry leading cloud tools. Includes file-sharing, online-document-editing, e-mail, instant messanging, and more. Easy to deploy, maintain and extend. 
 
 ## Included Packages
 
@@ -12,6 +12,7 @@ Project Cloud creates a seamless group collaboration solution by combining indus
 
 ## Installation
 A detailed installation procedure is given in [INSTALL.md](docs/INSTALL.md).
+We have provided a [setup tool](https://project-cirus.github.io/index.html) which allows you to easily fill in neccesary parameters and guides you through the setup and installaiton process.
 
 Information on authentication and user settings is documented in [SETUP.md](docs/SETUP.md).
 
