@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo $#
 if [[ $# -ne 2 ]]; then
     echo "Usage: install.sh <admin-password> <host>"
     exit 1
