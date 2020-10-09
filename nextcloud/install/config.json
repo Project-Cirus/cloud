@@ -18,6 +18,54 @@
         "external": {
             "sites": "{\"1\":{\"id\":1,\"name\":\"Riot\",\"url\":\"https:\\\/\\\/riot.{{domain}}\",\"lang\":\"\",\"type\":\"link\",\"device\":\"\",\"icon\":\"riot.png\",\"groups\":[],\"redirect\":false},\"2\":{\"icon\":\"settings.svg\",\"lang\":\"\",\"type\":\"settings\",\"device\":\"\",\"groups\":[],\"redirect\":true,\"id\":2,\"name\":\"Mailu\",\"url\":\"https:\\\/\\\/mail.{{domain}}\\\/admin\"}}",
             "max_site": "2"
+        },
+        "fulltextsearch": {
+            "app_navigation": "1",
+			"enabled": "yes",
+			"search_platform": "OCA\\FullTextSearch_ElasticSearch\\Platform\\ElasticSearchPlatform",
+			"types": ""
+        },
+        "fulltextsearch_elasticsearch": {
+			"analyzer_tokenizer": "standard",
+    	    "elastic_host": "http:\/\/es:9200\/",
+			"elastic_index": "my_index",
+			"enabled": "yes",
+			"installed_version": "1.5.2",
+			"types": ""
+        },
+        "files_fulltextsearch": {
+			"enabled": "yes",
+			"files_audio": "0",
+			"files_encrypted": "0",
+			"files_external": "1",
+			"files_federated": "0",
+			"files_group_folders": "0",
+			"files_image": "0",
+			"files_local": "1",
+			"files_office": "1",
+			"files_pdf": "1",
+			"files_size": "20",
+			"types": "filesystem"
+        },
+        "files_fulltextsearch_tesseract": {
+			"enabled": "yes",
+    	    "tesseract_enabled": "1",
+			"tesseract_lang": "eng,deu",
+			"tesseract_pdf": "1",
+			"tesseract_pdf_limit": "0",
+			"tesseract_psm": "4",
+			"types": ""
+        },
+        "richdocuments": {
+			"disable_certificate_verification": "",
+			"enabled": "yes",
+			"public_wopi_url": "https:\/\/cloud.{{domain}}\/custom_apps\/richdocumentscode\/proxy.php?req=",
+			"types": "filesystem,dav,prevent_group_restriction",
+			"wopi_url": "https:\/\/cloud.{{domain}}\/custom_apps\/richdocumentscode\/proxy.php?req="
+        },
+        "richdocumentscode": {
+			"enabled": "yes",
+			"types": ""
         }
     }
 }

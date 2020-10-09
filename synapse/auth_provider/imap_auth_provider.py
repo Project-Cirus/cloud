@@ -40,8 +40,13 @@ class IMAPAuthProvider:
         #     defer.returnValue(False)
 
         # user_id is of the form @foo:bar.com
+        logger.info("inside check_password")
+        logger.info("got user_id: %s", user_id)
+
         localpart = user_id.split(":", 1)[0][1:]
-        email = '@'.join(user_id[1:].split(':'))
+        domain = user_id[1:].split(':')[1] # e.g. synapse.domain.com
+        mailDomain = ".".join(domain.split(".")[1:]) # domain.com
+        email = '@'.join([localpart, mailDomain])
 
         logger.info("Trying to login as %s on %s:%d via IMAP", email, self.server, self.port)
 
@@ -49,11 +54,14 @@ class IMAPAuthProvider:
             M = imaplib.IMAP4(self.server, self.port)
             r = M.login(email, password)
             if r[0] == 'OK':
+                logger.info("imap login successful!")
                 M.logout()
         except:
+            logger.info("exception on imap login")
             defer.returnValue(False)
 
         if r[0] != 'OK':
+            logger.info("no exception but return value was: %s", r[0])
             defer.returnValue(False)
 
         # From here on, the user is authenticated   

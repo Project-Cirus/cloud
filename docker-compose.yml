@@ -3,16 +3,18 @@ version: '2.2'
 services:
 
   db:
-    image: mariadb
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    image: mariadb:10.5.6-focal
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     restart: always
     volumes:
       - db:/var/lib/mysql
     env_file:
       - nextcloud.env
+    networks:
+      - default   
 
   nextcloud:
-    image: nextcloud:apache
+    build: ./nextcloud
     restart: always
     volumes:
       - nextcloud:/var/www/html
@@ -20,12 +22,15 @@ services:
     environment:
       - VIRTUAL_HOST=cloud.${DOMAIN}
       - LETSENCRYPT_HOST=cloud.${DOMAIN}
-      - MYSQL_HOST=db
     env_file:
       - nextcloud.env
     depends_on:
       - db
       - front
+      - proxy
+    links:
+      - es
+      - db
     networks:
       - proxy-tier
       - default
@@ -51,7 +56,7 @@ services:
     image: jrcs/letsencrypt-nginx-proxy-companion
     restart: always
     volumes:
-      - /etc/dockercloud/proxy/certs:/etc/nginx/certs
+      - ./proxy/certs:/etc/nginx/certs
       - vhost.d:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -65,7 +70,7 @@ services:
     image: redis:alpine
     restart: always
     volumes:
-      - "/etc/dockercloud/redis:/data"
+      - ./redis:/data
     
   # Core services
   front:
@@ -87,10 +92,11 @@ services:
       - "995:995"
       - "143:143"
       - "993:993"
+      - "10025:10025"
       - "10143:10143"
     volumes:
-      - "/etc/dockercloud/proxy/certs/mail.${DOMAIN}/:/certs"
-      - "/etc/dockercloud/overrides/nginx:/overrides"
+      - ./proxy/certs/mail.${DOMAIN}/:/certs
+      - ./overrides/nginx:/overrides
     networks:
       - default  
 
@@ -108,8 +114,8 @@ services:
     restart: always
     env_file: mailu.env
     volumes:
-      - "/etc/dockercloud/data:/data"
-      - "/etc/dockercloud/dkim:/dkim"
+      - ./data:/data
+      - ./dkim:/dkim
     depends_on:
       - redis
 
@@ -118,8 +124,8 @@ services:
     restart: always
     env_file: mailu.env
     volumes:
-      - "/etc/dockercloud/mail:/mail"
-      - "/etc/dockercloud/overrides:/overrides"
+      - ./mail:/mail
+      - ./overrides:/overrides
     depends_on:
       - front
 
@@ -128,7 +134,7 @@ services:
     restart: always
     env_file: mailu.env
     volumes:
-      - "/etc/dockercloud/overrides:/overrides"
+      - ./overrides:/overrides
     depends_on:
       - front
       - resolver
@@ -140,9 +146,9 @@ services:
     restart: always
     env_file: mailu.env
     volumes:
-      - "/etc/dockercloud/filter:/var/lib/rspamd"
-      - "/etc/dockercloud/dkim:/dkim"
-      - "/etc/dockercloud/overrides/rspamd:/etc/rspamd/override.d"
+      - ./filter:/var/lib/rspamd
+      - ./dkim:/dkim
+      - ./overrides/rspamd:/etc/rspamd/override.d
     depends_on:
       - front
       - resolver
@@ -150,7 +156,7 @@ services:
       - 192.168.203.254
 
   riot:
-    image: vectorim/riot-web
+    image: vectorim/riot-web:v1.7.8
     restart: always
     environment:
       - VIRTUAL_HOST=riot.${DOMAIN}
@@ -177,6 +183,10 @@ services:
       - VIRTUAL_PORT=8008
       - VIRTUAL_NETWORK=nginx-proxy
       - LETSENCRYPT_HOST=synapse.${DOMAIN}
+      - POSTGRES_DB=synapse
+      - POSTGRES_HOST=synapse_db
+      - POSTGRES_USER={{matrix_db_user}}
+      - POSTGRES_PASSWORD={{matrix_db_password}}
     volumes:
       - ./synapse/data:/data
       - ./synapse/config:/config
@@ -194,11 +204,34 @@ services:
   synapse_db:
     image: docker.io/postgres:10-alpine
     environment:
+      - POSTGRES_DB=synapse
+      - POSTGRES_USER={{matrix_db_user}}
+      - POSTGRES_PASSWORD={{matrix_db_password}}
       # ensure the database gets created correctly
       # https://github.com/matrix-org/synapse/blob/master/docs/postgres.md#set-up-database
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
     volumes:
-      - /etc/dockercloud/matrix/db:/var/lib/postgresql/data 
+      - ./matrix/db:/var/lib/postgresql/data 
+
+  es:
+    build: ./elastic-docker/.
+    environment:
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elastic-data:/usr/share/elasticsearch/data
+      - elastic-plugins:/usr/share/elasticsearch/plugins
+    networks:
+      - default
 
 volumes:
   db:
@@ -206,6 +239,10 @@ volumes:
   certs:
   vhost.d:
   html:
+  elastic-data:
+    driver: local
+  elastic-plugins:
+    driver: local
 
 networks:
   proxy-tier:
