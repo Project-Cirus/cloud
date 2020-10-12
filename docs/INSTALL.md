@@ -103,12 +103,6 @@ $ sudo docker-compose up -d
 $ sudo docker-compose exec --user www-data nextcloud /install/install.sh
 ```
 
-### Create the initial index for full text search
-
-```
-$ sudo docker exec -u www-data projectcirus_nextcloud_1 php occ fulltextsearch:index
-```
-
 ### Create a cron job for your nextcloud on your host system (example for Ubuntu)
 
 ```
