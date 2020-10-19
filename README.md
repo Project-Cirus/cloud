@@ -6,7 +6,7 @@ Project Cirus creates a seamless group collaboration solution by combining indus
 ## Included Packages
 
 - *[Nextcloud](https://nextcloud.com)* offers an on-premise Universal File Access and sync platform with powerful collaboration capabilities and desktop, mobile and web interfaces.
-- *[ONLYOFFICE](https://onlyoffice.com)* is an online office suite comprising viewers and editors for texts, spreadsheets and presentations, fully compatible with Office Open XML formats: .docx, .xlsx, .pptx and enabling collaborative editing in real time.
+- *[Collabora Online](https://www.collaboraoffice.com/collabora-online/)* is a powerful LibreOffice-based online office that supports all major document, spreadsheet and presentation file formats, which you can integrate in your own infrastructure.
 - *[Mailu](https://mailu.io)* is a simple yet full-featured mail server as a set of Docker images.
 - *[Riot.im](https://about.riot.im/)* is a chat app, based on the Matrix protocol. State of the art end-to-end encryption ensures that private communication stays private.
 
