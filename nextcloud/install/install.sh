@@ -30,6 +30,8 @@ php occ config:import < /install/config.json
 
 echo "Copying skeleton files ..."
 cp /install/Mail_Setup.png core/skeleton/Mail_Setup.png
+cp /install/Mail_Setup.png data/$NEXTCLOUD_ADMIN_USER/files/Mail_Setup.png
+php occ files:scan --all
 
 echo "Creating initial search index ..."
 php occ fulltextsearch:index
