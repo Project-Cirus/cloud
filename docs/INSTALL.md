@@ -74,12 +74,12 @@ TXT - v=spf1 mx a:mail.example.com -all
 
 ### Get the source
 On your host server create a new project directory and make sure your user has read, write and execute rights to the directory.</p>
-It might be a good idea to create a new user for this project. It is important that this user is allowed to run ```docker``` and ```docker-compose``` commands. For this purpose you might want to add your user to the ```sudo``` group.
+It might be a good idea to create a new user for this project. It is important that this user is allowed to run ```docker``` and ```docker-compose``` commands and has execution permissions for the unpacked files. You also might want to add your user to the ```sudo``` group.
 
 ```
   $ mkdir /srv/projectcirus
   $ cd /srv/projectcirus
-  $ wget -O projectcirus.tar.gz {{zipPath}}
+  $ wget -O projectcirus.tar.gz xyz.tar.gz
   $ tar -xzf projectcirus.tar.gz --strip 1
 ```
 Please review your downloaded and extracted files.
@@ -88,7 +88,7 @@ Please review your downloaded and extracted files.
 This will run the ```generate```-command to generate keys for the synapse container.
 
 ```
-$ ./synapse/setup.sh
+$ sudo ./synapse/setup.sh
 ```
 
 ### Download and start the containers
@@ -112,7 +112,7 @@ $ sudo crontab -e
 Add the following to your crontab:
 
 ```
-*/5 * * * * /usr/bin/docker exec --user www-data projectcirus_nextcloud_1 php -f cron.php > /dev/null 2>&1
+*/5 * * * * /usr/bin/docker exec --user www-data nextcloud php -f cron.php > /dev/null 2>&1
 ```
 
 ### Congratulations on setting up your cloud!
