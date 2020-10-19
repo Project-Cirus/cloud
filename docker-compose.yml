@@ -165,6 +165,18 @@ services:
       - resolver
     dns:
       - 192.168.203.254
+      
+  antivirus:
+    image: ${DOCKER_ORG:-mailu}/${DOCKER_PREFIX:-}clamav:${MAILU_VERSION:-1.7}
+    container_name: antivirus
+    restart: always
+    env_file: mailu.env
+    volumes:
+      - ./filter:/data
+    depends_on:
+      - resolver
+    dns:
+      - 192.168.203.254
 
   riot:
     image: vectorim/riot-web:v1.7.8
