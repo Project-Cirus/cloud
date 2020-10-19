@@ -72,6 +72,11 @@
             "custom_json": "",
             "enabled": "yes",
             "types": ""
+        },
+        "mail": {
+            "enabled": "yes",
+            "provisioning_settings": "{\"active\":true,\"version\":1,\"email\":\"%USERID%\",\"imapUser\":\"%USERID%\",\"imapHost\":\"mail.{{domain}}\",\"imapPort\":993,\"imapSslMode\":\"ssl\",\"smtpUser\":\"%USERID%\",\"smtpHost\":\"mail.{{domain}}\",\"smtpPort\":465,\"smtpSslMode\":\"ssl\"}",
+            "types": ""
         }
     }
 }
